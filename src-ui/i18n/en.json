@@ -54,5 +54,20 @@
     "undoSuccess": "Successfully restored {count} files to original locations",
     "skippedHeading": "Skipped items ({count})",
     "emptyPlan": "No files need moving"
+  },
+  "island": {
+    "title": "Rawaq Living Island",
+    "shelfTitle": "Quick Shelf",
+    "shelfEmpty": "Drag and drop files here to stage them temporarily without touching originals",
+    "shelfCount": "{count} files staged in shelf",
+    "clearShelf": "Clear Shelf",
+    "removeItem": "Remove Reference",
+    "clipboardTitle": "Smart Clipboard Action",
+    "clipboardSave": "Save Note",
+    "clipboardDismiss": "Dismiss",
+    "clipboardRejected": "Unsafe content blocked",
+    "fullscreenNotice": "Fullscreen mode active (Capsule automatically hidden)",
+    "toggleCapsule": "Toggle Capsule Mode",
+    "optInNotice": "Clipboard inspection opt-in active"
   }
 }

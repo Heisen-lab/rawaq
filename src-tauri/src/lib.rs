@@ -1,15 +1,32 @@
 pub mod boxes;
 pub mod core_domain;
 pub mod i18n;
+pub mod island;
 pub mod organizer;
 pub mod security;
 pub mod storage;
 
 use crate::boxes::{BoxService, FolderState};
 use crate::i18n::{verify_embedded_catalogs, ParityReport};
+use crate::island::{
+    CapsuleState, ClipboardSuggestion, FullscreenDetector, QuickShelfItem, QuickShelfManager,
+    SmartClipboardService,
+};
 use crate::organizer::{DryRunPlan, ExecutionReport, SafeOrganizerEngine, UndoReport};
 use crate::security::{CommandGate, PathSanitizer, ValidatedPath};
-use crate::storage::{DesktopBox, OrganizeRule, Storage};
+use crate::storage::{CaptureNote, DesktopBox, OrganizeRule, Storage};
+use std::sync::OnceLock;
+
+static GLOBAL_SHELF: OnceLock<QuickShelfManager> = OnceLock::new();
+static GLOBAL_DETECTOR: OnceLock<FullscreenDetector> = OnceLock::new();
+
+fn get_shelf() -> &'static QuickShelfManager {
+    GLOBAL_SHELF.get_or_init(QuickShelfManager::new)
+}
+
+fn get_detector() -> &'static FullscreenDetector {
+    GLOBAL_DETECTOR.get_or_init(FullscreenDetector::new)
+}
 
 #[tauri::command]
 fn validate_path_command(
@@ -108,6 +125,71 @@ fn list_undo_batches_command(db_path: String) -> Result<Vec<String>, String> {
     storage.list_undo_batches().map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn add_to_quick_shelf_command(paths: Vec<String>) -> Result<Vec<QuickShelfItem>, String> {
+    get_shelf().add_paths(&paths).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_quick_shelf_items_command() -> Vec<QuickShelfItem> {
+    get_shelf().get_items()
+}
+
+#[tauri::command]
+fn remove_from_quick_shelf_command(item_id: String) -> bool {
+    get_shelf().remove_item(&item_id)
+}
+
+#[tauri::command]
+fn clear_quick_shelf_command() -> usize {
+    get_shelf().clear()
+}
+
+#[tauri::command]
+fn set_fullscreen_active_command(active: bool) -> CapsuleState {
+    get_detector().set_fullscreen_active(active)
+}
+
+#[tauri::command]
+fn toggle_capsule_collapse_command() -> CapsuleState {
+    get_detector().toggle_collapse()
+}
+
+#[tauri::command]
+fn get_capsule_state_command() -> CapsuleState {
+    get_detector().get_state()
+}
+
+#[tauri::command]
+fn process_clipboard_command(
+    raw_text: String,
+    opt_in: bool,
+) -> Result<Option<ClipboardSuggestion>, String> {
+    SmartClipboardService::process_text(&raw_text, opt_in).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn save_clipboard_note_command(
+    db_path: String,
+    content: String,
+    source_url: Option<String>,
+    note_type: Option<String>,
+) -> Result<i64, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    let sanitized_content = CommandGate::sanitize_text_payload(&content);
+    let note = CaptureNote {
+        id: None,
+        content: sanitized_content,
+        note_type: note_type.unwrap_or_else(|| "quick_capture".to_string()),
+        tags: "[\"island\", \"clipboard\"]".to_string(),
+        source_url,
+        created_at: None,
+    };
+    storage
+        .insert_capture_note(&note)
+        .map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -124,7 +206,16 @@ pub fn run() {
             preview_organization_command,
             execute_organization_command,
             undo_organization_command,
-            list_undo_batches_command
+            list_undo_batches_command,
+            add_to_quick_shelf_command,
+            get_quick_shelf_items_command,
+            remove_from_quick_shelf_command,
+            clear_quick_shelf_command,
+            set_fullscreen_active_command,
+            toggle_capsule_collapse_command,
+            get_capsule_state_command,
+            process_clipboard_command,
+            save_clipboard_note_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running Rawaq Tauri application");
