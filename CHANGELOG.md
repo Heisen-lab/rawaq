@@ -5,6 +5,51 @@
 
 ---
 
+## [المرحلة 6] — إدارة المهام اليومية والالتقاط السريع ومؤقت التركيز والبحث الموحد (PR #14 / Issue #13)
+*التاريخ: 2026-11-12*
+
+### المضاف (Added)
+- **إدارة المهام اليومية المصغرة (`TaskManager`):**
+  - نظام مهام سريع موجه حسب الفترات اليومية: الصباح الباكر (`morning`)، مهام اليوم المباشرة (`today`)، والمساء (`evening`).
+  - التحقق الأمني من المدخلات عبر `PathSanitizer` لمنع هجمات XSS وتنظيف المسافات والرموز الخبيثة وحظر النصوص الفارغة.
+  - إمكانية ربط المهمة بصندوق محدد أو تشغيلها منفردة، مع استعلامات فرز وتحديث وإكمال وحذف آمنة ومباشرة في SQLite.
+- **ملاحظات الالتقاط السريع (`CaptureManager`):**
+  - تدوين الأفكار والملاحظات الخاطفة في أقل من ثانية وتخزينها في قاعدة البيانات المحلية.
+  - دعم التثبيت (`is_pinned`) والتحويل الفوري إلى مهمة عمل بنقرة واحدة، مع تطهير النصوص عبر `PathSanitizer::sanitize_text`.
+- **مؤقت بومودورو للتركيز وحماية الجلسات (`PomodoroTimer`):**
+  - آلة حالات صارمة للتركيز: خامل (`Idle`) ↔ تركيز (`Focusing`) ↔ استراحة قصيرة (`ShortBreak`) ↔ استراحة طويلة (`LongBreak`) ↔ موقوف مؤقتًا (`Paused`).
+  - التخزين الذري لجلسات التركيز في جدول `focus_sessions` الجديد (الترحيل `MIGRATION_V2`).
+  - حماية الجلسات من انقطاع التيار الكهربائي أو الانهيار المفاجئ (`Crash Resilience`): إمكانية استعادة آخر حالة نشطة وحساب الفارق الزمني عبر `get_active_focus_session`.
+- **محرك البحث الموحد عالي السرعة (`UnifiedSearchEngine`):**
+  - محرك بحث متقدم يبحث في جزء من المليثانية (< 50ms) عبر أربعة مصادر في وقت واحد: الملفات، الصناديق الافتراضية، المهام اليومية، وملاحظات الالتقاط السريع.
+  - مطبّع النصوص العربية المتقدم (`normalize_arabic_text`):
+    - توحيد همزات الألف (`أ`, `إ`, `آ` -> `ا`).
+    - توحيد التاء المربوطة والهاء (`ة` -> `ه`).
+    - توحيد الألف المقصورة والياء (`ى` -> `ي`).
+    - تجريد علامات التشكيل الكاملة (الفتحة، الضمة، الكسرة، التنوين، الشدة، السكون) وحذف التطويل (الكشيدة `ـ`).
+    - دعم البحث متعدد الكلمات بأي ترتيب (`multi-term matching`).
+- **أوامر التواصل الآمن في Tauri (IPC Commands):**
+  - `list_tasks_command`, `create_task_command`, `update_task_command`, `delete_task_command`
+  - `list_capture_notes_command`, `create_capture_note_command`, `update_capture_note_command`, `delete_capture_note_command`
+  - `start_focus_timer_command`, `pause_focus_timer_command`, `resume_focus_timer_command`, `stop_focus_timer_command`, `get_focus_timer_state_command`
+  - `unified_search_command`
+- **مكونات الواجهة الرسومية ثنائية الاتجاه (`BiDi UI`):**
+  - مكوّن `ProductivityHub`: واجهة تفاعلية شاملة تضم شريط البحث الموحد مع كبسولات تصنيف النتائج وسرعة الاستجابة، تبويبات المهام اليومية المقسمة زمنيًا مع شريط نسبة الإنجاز اليومي، نافذة منبثقة لمؤقت التركيز مع شريط تقدم دائري وأزرار التحكم، وبطاقات الملاحظات السريعة مع ميزة التثبيت والتحويل لمهمة.
+  - استخدام حصري للخصائص المنطقية في CSS (`bidi.css`) وتوافقية تامة مع الشاشات العربية (`RTL`) والإنجليزية (`LTR`).
+- **الاختبارات الآلية المكتملة:**
+  - `productivity::test_pomodoro_state_machine_transitions_and_persistence`
+  - `productivity::test_tasks_and_captures_crud_with_edge_inputs`
+  - `search::test_unified_search_arabic_normalization_and_speed`
+  - `ui::renders ProductivityHub in Arabic (RTL) and filters tasks by period`
+  - `ui::toggles task completion and displays progress bar`
+  - `ui::handles Quick Capture notes: creation, pinning, and converting to task`
+  - `ui::controls Focus Timer: start, pause, resume, and stop`
+  - `ui::executes Unified Search and categorizes results`
+- **البرنامج التوضيحي الواقعي (`demo_productivity`):**
+  - اختبار عملي شامل يثبت إنشاء المهام اليومية، الالتقاط السريع، دورات مؤقت التركيز مع التخزين والاسترجاع عند الانهيار، والبحث فائق السرعة في 0 ميلي ثانية مع التطبيع العربي المتقدم.
+
+---
+
 ## [المرحلة 5] — كبسولة الشاشة العلوية التفاعلية والدرج المؤقت والحافظة (PR #12 / Issue #11)
 *التاريخ: 2026-11-12*
 

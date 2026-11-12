@@ -26,6 +26,9 @@ pub enum StorageError {
 
     #[error("Migration error: {0}")]
     MigrationFailed(String),
+
+    #[error("Storage error: {0}")]
+    Other(String),
 }
 
 // ─── Domain Models ────────────────────────────────────────────────────────────
@@ -97,6 +100,17 @@ pub struct UndoOperation {
     pub file_size: i64,
     pub status: String, // "PENDING" | "COMPLETED" | "FAILED" | "UNDONE"
     pub error_message: Option<String>,
+    pub created_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FocusSessionRecord {
+    pub id: Option<i64>,
+    pub task_id: Option<i64>,
+    pub state: String, // "IDLE" | "RUNNING" | "PAUSED" | "COMPLETED"
+    pub target_seconds: i64,
+    pub elapsed_seconds: i64,
+    pub last_tick_utc: Option<String>,
     pub created_at: Option<String>,
 }
 
@@ -179,6 +193,18 @@ CREATE INDEX IF NOT EXISTS idx_tasks_period ON task_items(period);
 CREATE INDEX IF NOT EXISTS idx_notes_type ON capture_notes(note_type);
 "#;
 
+pub const MIGRATION_V2: &str = r#"
+CREATE TABLE IF NOT EXISTS focus_sessions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id         INTEGER REFERENCES task_items(id) ON DELETE SET NULL,
+    state           TEXT NOT NULL DEFAULT 'IDLE',
+    target_seconds  INTEGER NOT NULL DEFAULT 1500,
+    elapsed_seconds INTEGER NOT NULL DEFAULT 0,
+    last_tick_utc   TEXT,
+    created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+"#;
+
 /// Run all migrations idempotently: safe to call on an empty DB or an existing one.
 pub fn run_migrations(conn: &Connection) -> Result<(), StorageError> {
     conn.execute_batch("PRAGMA journal_mode = WAL;")?;
@@ -219,6 +245,15 @@ pub fn run_migrations(conn: &Connection) -> Result<(), StorageError> {
         conn.execute(
             "INSERT OR REPLACE INTO schema_version (version) VALUES (?1)",
             params![1],
+        )?;
+    }
+
+    if db_version < 2 {
+        conn.execute_batch(MIGRATION_V2)
+            .map_err(|e| StorageError::MigrationFailed(format!("V2 migration failed: {e}")))?;
+        conn.execute(
+            "INSERT OR REPLACE INTO schema_version (version) VALUES (?1)",
+            params![2],
         )?;
     }
 
@@ -488,6 +523,65 @@ impl Storage {
         ).map_err(StorageError::from)
     }
 
+    pub fn list_tasks(&self, period: Option<&str>) -> Result<Vec<TaskItem>, StorageError> {
+        if let Some(p) = period {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, title, description, period, is_completed, tags, created_at, updated_at FROM task_items WHERE period = ?1 ORDER BY id DESC",
+            )?;
+            let rows = stmt.query_map(params![p], |row| {
+                Ok(TaskItem {
+                    id: Some(row.get(0)?),
+                    title: row.get(1)?,
+                    description: row.get(2)?,
+                    period: row.get(3)?,
+                    is_completed: row.get::<_, i32>(4)? != 0,
+                    tags: row.get(5)?,
+                    created_at: Some(row.get(6)?),
+                    updated_at: Some(row.get(7)?),
+                })
+            })?;
+            let result: Result<Vec<TaskItem>, rusqlite::Error> = rows.collect();
+            result.map_err(StorageError::from)
+        } else {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, title, description, period, is_completed, tags, created_at, updated_at FROM task_items ORDER BY id DESC",
+            )?;
+            let rows = stmt.query_map([], |row| {
+                Ok(TaskItem {
+                    id: Some(row.get(0)?),
+                    title: row.get(1)?,
+                    description: row.get(2)?,
+                    period: row.get(3)?,
+                    is_completed: row.get::<_, i32>(4)? != 0,
+                    tags: row.get(5)?,
+                    created_at: Some(row.get(6)?),
+                    updated_at: Some(row.get(7)?),
+                })
+            })?;
+            let result: Result<Vec<TaskItem>, rusqlite::Error> = rows.collect();
+            result.map_err(StorageError::from)
+        }
+    }
+
+    pub fn update_task(&self, task: &TaskItem) -> Result<(), StorageError> {
+        let Some(task_id) = task.id else {
+            return Err(StorageError::Other(
+                "Task ID required for update".to_string(),
+            ));
+        };
+        self.conn.execute(
+            "UPDATE task_items SET title = ?1, description = ?2, period = ?3, is_completed = ?4, tags = ?5, updated_at = (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) WHERE id = ?6",
+            params![task.title, task.description, task.period, task.is_completed as i32, task.tags, task_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_task(&self, id: i64) -> Result<(), StorageError> {
+        self.conn
+            .execute("DELETE FROM task_items WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
     // ── Capture Notes ─────────────────────────────────────────────────────
 
     pub fn insert_capture_note(&self, note: &CaptureNote) -> Result<i64, StorageError> {
@@ -513,6 +607,85 @@ impl Storage {
                 })
             },
         ).map_err(StorageError::from)
+    }
+
+    pub fn list_capture_notes(
+        &self,
+        limit: Option<usize>,
+    ) -> Result<Vec<CaptureNote>, StorageError> {
+        let max_items = limit.unwrap_or(100) as i64;
+        let mut stmt = self.conn.prepare(
+            "SELECT id, content, note_type, tags, source_url, created_at FROM capture_notes ORDER BY id DESC LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![max_items], |row| {
+            Ok(CaptureNote {
+                id: Some(row.get(0)?),
+                content: row.get(1)?,
+                note_type: row.get(2)?,
+                tags: row.get(3)?,
+                source_url: row.get(4)?,
+                created_at: Some(row.get(5)?),
+            })
+        })?;
+        let result: Result<Vec<CaptureNote>, rusqlite::Error> = rows.collect();
+        result.map_err(StorageError::from)
+    }
+
+    pub fn update_capture_note(&self, note: &CaptureNote) -> Result<(), StorageError> {
+        let Some(note_id) = note.id else {
+            return Err(StorageError::Other(
+                "Note ID required for update".to_string(),
+            ));
+        };
+        self.conn.execute(
+            "UPDATE capture_notes SET content = ?1, note_type = ?2, tags = ?3, source_url = ?4 WHERE id = ?5",
+            params![note.content, note.note_type, note.tags, note.source_url, note_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_capture_note(&self, id: i64) -> Result<(), StorageError> {
+        self.conn
+            .execute("DELETE FROM capture_notes WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    // ── Focus Sessions (Pomodoro) ─────────────────────────────────────────
+
+    pub fn save_focus_session(&self, session: &FocusSessionRecord) -> Result<i64, StorageError> {
+        if let Some(id) = session.id {
+            self.conn.execute(
+                "UPDATE focus_sessions SET task_id = ?1, state = ?2, target_seconds = ?3, elapsed_seconds = ?4, last_tick_utc = ?5 WHERE id = ?6",
+                params![session.task_id, session.state, session.target_seconds, session.elapsed_seconds, session.last_tick_utc, id],
+            )?;
+            Ok(id)
+        } else {
+            self.conn.execute(
+                "INSERT INTO focus_sessions (task_id, state, target_seconds, elapsed_seconds, last_tick_utc) VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![session.task_id, session.state, session.target_seconds, session.elapsed_seconds, session.last_tick_utc],
+            )?;
+            Ok(self.conn.last_insert_rowid())
+        }
+    }
+
+    pub fn get_active_focus_session(&self) -> Result<Option<FocusSessionRecord>, StorageError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, task_id, state, target_seconds, elapsed_seconds, last_tick_utc, created_at FROM focus_sessions ORDER BY id DESC LIMIT 1",
+        )?;
+        let mut rows = stmt.query([])?;
+        if let Some(row) = rows.next()? {
+            Ok(Some(FocusSessionRecord {
+                id: Some(row.get(0)?),
+                task_id: row.get(1)?,
+                state: row.get(2)?,
+                target_seconds: row.get(3)?,
+                elapsed_seconds: row.get(4)?,
+                last_tick_utc: row.get(5)?,
+                created_at: Some(row.get(6)?),
+            }))
+        } else {
+            Ok(None)
+        }
     }
 
     // ── Undo Operations ───────────────────────────────────────────────────
@@ -808,7 +981,7 @@ mod tests {
                 row.get(0)
             })
             .unwrap();
-        assert_eq!(version, 1);
+        assert_eq!(version, 2);
 
         // Verify all tables exist
         let tables: Vec<String> = {
@@ -829,6 +1002,7 @@ mod tests {
         assert!(tables.contains(&"task_items".to_string()));
         assert!(tables.contains(&"capture_notes".to_string()));
         assert!(tables.contains(&"undo_operations".to_string()));
+        assert!(tables.contains(&"focus_sessions".to_string()));
         assert!(tables.contains(&"schema_version".to_string()));
 
         // Insert some data before re-running migrations to prove idempotency

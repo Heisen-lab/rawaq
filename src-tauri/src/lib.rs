@@ -3,6 +3,8 @@ pub mod core_domain;
 pub mod i18n;
 pub mod island;
 pub mod organizer;
+pub mod productivity;
+pub mod search;
 pub mod security;
 pub mod storage;
 
@@ -13,12 +15,15 @@ use crate::island::{
     SmartClipboardService,
 };
 use crate::organizer::{DryRunPlan, ExecutionReport, SafeOrganizerEngine, UndoReport};
+use crate::productivity::{CaptureManager, PomodoroStatus, PomodoroTimer, TaskManager};
+use crate::search::{SearchResponse, SearchableFile, UnifiedSearchEngine};
 use crate::security::{CommandGate, PathSanitizer, ValidatedPath};
-use crate::storage::{CaptureNote, DesktopBox, OrganizeRule, Storage};
+use crate::storage::{CaptureNote, DesktopBox, OrganizeRule, Storage, TaskItem};
 use std::sync::OnceLock;
 
 static GLOBAL_SHELF: OnceLock<QuickShelfManager> = OnceLock::new();
 static GLOBAL_DETECTOR: OnceLock<FullscreenDetector> = OnceLock::new();
+static GLOBAL_POMODORO: OnceLock<PomodoroTimer> = OnceLock::new();
 
 fn get_shelf() -> &'static QuickShelfManager {
     GLOBAL_SHELF.get_or_init(QuickShelfManager::new)
@@ -26,6 +31,10 @@ fn get_shelf() -> &'static QuickShelfManager {
 
 fn get_detector() -> &'static FullscreenDetector {
     GLOBAL_DETECTOR.get_or_init(FullscreenDetector::new)
+}
+
+fn get_pomodoro() -> &'static PomodoroTimer {
+    GLOBAL_POMODORO.get_or_init(PomodoroTimer::new)
 }
 
 #[tauri::command]
@@ -190,6 +199,152 @@ fn save_clipboard_note_command(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn create_task_command(
+    db_path: String,
+    title: String,
+    description: Option<String>,
+    period: Option<String>,
+    tags: Option<String>,
+) -> Result<TaskItem, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    TaskManager::create_task(
+        &storage,
+        &title,
+        description.as_deref(),
+        period.as_deref(),
+        tags.as_deref(),
+    )
+}
+
+#[tauri::command]
+fn list_tasks_command(db_path: String, period: Option<String>) -> Result<Vec<TaskItem>, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    TaskManager::list_tasks(&storage, period.as_deref())
+}
+
+#[tauri::command]
+fn toggle_task_command(db_path: String, id: i64) -> Result<bool, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    TaskManager::toggle_task(&storage, id)
+}
+
+#[tauri::command]
+fn update_task_command(
+    db_path: String,
+    id: i64,
+    title: String,
+    description: Option<String>,
+    period: Option<String>,
+    tags: Option<String>,
+) -> Result<TaskItem, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    TaskManager::update_task(
+        &storage,
+        id,
+        &title,
+        description.as_deref(),
+        period.as_deref(),
+        tags.as_deref(),
+    )
+}
+
+#[tauri::command]
+fn delete_task_command(db_path: String, id: i64) -> Result<(), String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    TaskManager::delete_task(&storage, id)
+}
+
+#[tauri::command]
+fn create_capture_note_command(
+    db_path: String,
+    content: String,
+    note_type: Option<String>,
+    tags: Option<String>,
+    source_url: Option<String>,
+) -> Result<CaptureNote, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    CaptureManager::create_capture(
+        &storage,
+        &content,
+        note_type.as_deref(),
+        tags.as_deref(),
+        source_url.as_deref(),
+    )
+}
+
+#[tauri::command]
+fn list_capture_notes_command(
+    db_path: String,
+    limit: Option<usize>,
+) -> Result<Vec<CaptureNote>, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    CaptureManager::list_captures(&storage, limit)
+}
+
+#[tauri::command]
+fn delete_capture_note_command(db_path: String, id: i64) -> Result<(), String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    CaptureManager::delete_capture(&storage, id)
+}
+
+#[tauri::command]
+fn pomodoro_start_command(task_id: Option<i64>, duration_seconds: Option<u64>) -> PomodoroStatus {
+    get_pomodoro().start(task_id, duration_seconds)
+}
+
+#[tauri::command]
+fn pomodoro_pause_command() -> PomodoroStatus {
+    get_pomodoro().pause()
+}
+
+#[tauri::command]
+fn pomodoro_resume_command() -> PomodoroStatus {
+    get_pomodoro().resume()
+}
+
+#[tauri::command]
+fn pomodoro_tick_command(delta_seconds: u64) -> PomodoroStatus {
+    get_pomodoro().tick(delta_seconds)
+}
+
+#[tauri::command]
+fn pomodoro_stop_command() -> PomodoroStatus {
+    get_pomodoro().stop()
+}
+
+#[tauri::command]
+fn pomodoro_status_command() -> PomodoroStatus {
+    get_pomodoro().get_status()
+}
+
+#[tauri::command]
+fn pomodoro_save_command(db_path: String) -> Result<(), String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    get_pomodoro()
+        .save_to_storage(&storage)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn pomodoro_restore_command(db_path: String) -> Result<PomodoroStatus, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    get_pomodoro()
+        .load_from_storage(&storage)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn unified_search_command(
+    db_path: String,
+    query: String,
+    files: Option<Vec<SearchableFile>>,
+) -> Result<SearchResponse, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    let file_list = files.unwrap_or_default();
+    Ok(UnifiedSearchEngine::search(&storage, &query, &file_list))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -215,7 +370,24 @@ pub fn run() {
             toggle_capsule_collapse_command,
             get_capsule_state_command,
             process_clipboard_command,
-            save_clipboard_note_command
+            save_clipboard_note_command,
+            create_task_command,
+            list_tasks_command,
+            toggle_task_command,
+            update_task_command,
+            delete_task_command,
+            create_capture_note_command,
+            list_capture_notes_command,
+            delete_capture_note_command,
+            pomodoro_start_command,
+            pomodoro_pause_command,
+            pomodoro_resume_command,
+            pomodoro_tick_command,
+            pomodoro_stop_command,
+            pomodoro_status_command,
+            pomodoro_save_command,
+            pomodoro_restore_command,
+            unified_search_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running Rawaq Tauri application");

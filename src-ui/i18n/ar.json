@@ -69,5 +69,27 @@
     "fullscreenNotice": "وضع ملء الشاشة مفعّل (الكبسولة مخفية تلقائيًا)",
     "toggleCapsule": "تبديل وضع الكبسولة",
     "optInNotice": "الموافقة المسبقة على فحص الحافظة مفعّلة"
+  },
+  "productivity": {
+    "title": "مركز الإنتاجية والتركيز",
+    "searchPlaceholder": "ابحث في الملفات، المهام، والملاحظات...",
+    "searchTook": "استغرق البحث {ms} مللي ثانية",
+    "noResults": "لم يتم العثور على نتائج مطابقة لـ «{query}»",
+    "tasksTitle": "المهام اليومية",
+    "periodMorning": "صباحًا",
+    "periodToday": "اليوم",
+    "periodEvening": "مساءً",
+    "addTaskPlaceholder": "أضف مهمة جديدة واضغط Enter...",
+    "pomodoroTitle": "مؤقت التركيز (بومودورو)",
+    "timerStart": "بدء التركيز",
+    "timerPause": "إيقاف مؤقت",
+    "timerResume": "استئناف",
+    "timerStop": "إنهاء",
+    "captureTitle": "الالتقاط السريع",
+    "capturePlaceholder": "دوّن ملاحظة أو رابطًا سريعًا...",
+    "saveCapture": "حفظ الملاحظة",
+    "badgeFile": "ملف",
+    "badgeTask": "مهمة",
+    "badgeNote": "ملاحظة"
   }
 }

@@ -69,5 +69,27 @@
     "fullscreenNotice": "Fullscreen mode active (Capsule automatically hidden)",
     "toggleCapsule": "Toggle Capsule Mode",
     "optInNotice": "Clipboard inspection opt-in active"
+  },
+  "productivity": {
+    "title": "Productivity & Focus Hub",
+    "searchPlaceholder": "Search files, tasks, and notes...",
+    "searchTook": "Search completed in {ms} ms",
+    "noResults": "No results found matching '{query}'",
+    "tasksTitle": "Daily Tasks",
+    "periodMorning": "Morning",
+    "periodToday": "Today",
+    "periodEvening": "Evening",
+    "addTaskPlaceholder": "Add a new task and press Enter...",
+    "pomodoroTitle": "Focus Timer (Pomodoro)",
+    "timerStart": "Start Focus",
+    "timerPause": "Pause",
+    "timerResume": "Resume",
+    "timerStop": "Stop",
+    "captureTitle": "Quick Capture",
+    "capturePlaceholder": "Type a quick note or link...",
+    "saveCapture": "Save Note",
+    "badgeFile": "File",
+    "badgeTask": "Task",
+    "badgeNote": "Note"
   }
 }
