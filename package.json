@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "tauri": "tauri",
     "lint": "eslint src-ui --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest"
