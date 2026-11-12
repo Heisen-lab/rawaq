@@ -1,6 +1,7 @@
 # Rust / Tauri build artifacts
 target/
 **/target/
+src-tauri/gen/
 
 # Node / Frontend dependencies & build outputs
 node_modules/
