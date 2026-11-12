@@ -109,5 +109,11 @@
     "simulateReconnect": "محاكاة إعادة التوصيل",
     "releaseChecksumsTitle": "بصمات حزم الإصدار الرسمية (SHA-256)",
     "releaseAllVerified": "تم التحقق من مطابقة جميع الحزم بنسبة 100%"
+  },
+  "workspace": {
+    "tabProductivity": "الإنتاجية ومؤقت التركيز",
+    "tabDisplays": "الشاشات وتوفير الموارد",
+    "tabOrganizer": "الفرز الآمن ومعاينة النقل",
+    "tabOverview": "نظرة عامة وبوابة الأمان"
   }
 }

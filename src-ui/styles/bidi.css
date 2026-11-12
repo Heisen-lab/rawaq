@@ -1504,5 +1504,268 @@ body {
   color: #38bdf8;
 }
 
+/* ==========================================================================
+   Multi-Style Theme Engine (Ambient Glass, Dynamic Island, Linear Precision)
+   100% CSS Logical Properties (inline / block)
+   ========================================================================== */
+
+.rawaq-theme-root {
+  min-height: 100vh;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Preset: Ambient Frosted Glass */
+.theme-glass .rawaq-shell,
+.theme-glass .multimonitor-hub,
+.theme-glass .productivity-hub,
+.theme-glass .rawaq-organizer-container,
+.theme-glass .box-frame {
+  backdrop-filter: blur(var(--app-glass-blur, 24px));
+  -webkit-backdrop-filter: blur(var(--app-glass-blur, 24px));
+  background-color: var(--app-bg, rgba(15, 23, 42, 0.55));
+  border: 1px solid var(--app-border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--app-radius, 16px);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Preset: Apple Dynamic Island */
+.theme-island .rawaq-shell,
+.theme-island .multimonitor-hub,
+.theme-island .productivity-hub,
+.theme-island .rawaq-organizer-container,
+.theme-island .box-frame {
+  backdrop-filter: blur(var(--app-glass-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--app-glass-blur, 16px));
+  background-color: var(--app-bg, rgba(10, 10, 14, 0.88));
+  border: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--app-radius, 28px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+}
+
+/* Preset: Raycast / Linear Precision */
+.theme-linear .rawaq-shell,
+.theme-linear .multimonitor-hub,
+.theme-linear .productivity-hub,
+.theme-linear .rawaq-organizer-container,
+.theme-linear .box-frame {
+  backdrop-filter: none;
+  background-color: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--app-radius, 6px);
+  box-shadow: none;
+}
+
+/* Dynamic Accent Colors */
+.rawaq-theme-root .action-btn,
+.rawaq-theme-root .rawaq-button,
+.rawaq-theme-root .btn-toggle-saver {
+  background-color: var(--app-accent, #38bdf8);
+  color: #0f172a;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.rawaq-theme-root .action-btn:hover,
+.rawaq-theme-root .rawaq-button:hover,
+.rawaq-theme-root .btn-toggle-saver:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Theme Customizer Bar */
+.theme-customizer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.625rem;
+  padding-inline: 1rem;
+  background-color: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-block-end: 1rem;
+  position: relative;
+}
+
+.theme-presets-group {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.preset-btn.is-active {
+  color: #0f172a;
+  background-color: var(--app-accent, #38bdf8);
+  font-weight: 600;
+}
+
+.theme-accents-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.accent-dot {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, outline 0.15s ease;
+}
+
+.accent-dot:hover {
+  transform: scale(1.2);
+}
+
+.accent-dot.is-selected {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  transform: scale(1.15);
+}
+
+.fine-tune-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.fine-tune-drawer {
+  position: absolute;
+  inset-block-start: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  inline-size: 280px;
+  padding: 1rem;
+  background-color: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.close-drawer-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.slider-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.slider-control input[type="range"] {
+  inline-size: 100%;
+  accent-color: var(--app-accent, #38bdf8);
+}
+
+/* Workspace Tabs Navigation */
+.workspace-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-block-end: 1px solid var(--surface-border);
+  padding-block-end: 0.5rem;
+  margin-block-end: 1.25rem;
+  overflow-x: auto;
+}
+
+.workspace-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 1rem;
+  border-radius: var(--app-radius, 8px);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.workspace-tab-btn:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.workspace-tab-btn.is-active {
+  color: #0f172a;
+  background-color: var(--app-accent, #38bdf8);
+  font-weight: 600;
+  box-shadow: 0 4px 12px var(--app-accent-glow, rgba(56, 189, 248, 0.35));
+}
+
+.workspace-content-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.overview-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+
+
 
 

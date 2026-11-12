@@ -109,5 +109,11 @@
     "simulateReconnect": "Simulate Reconnect",
     "releaseChecksumsTitle": "Official Release SHA-256 Checksums",
     "releaseAllVerified": "All platform bundles verified 100% matched"
+  },
+  "workspace": {
+    "tabProductivity": "Productivity & Focus Hub",
+    "tabDisplays": "Displays & Resource Saver",
+    "tabOrganizer": "Safe Auto-Organizer",
+    "tabOverview": "Overview & Security Gate"
   }
 }
