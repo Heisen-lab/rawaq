@@ -1,0 +1,28 @@
+{
+  "app": {
+    "title": "Rawaq",
+    "subtitle": "Cross-Platform Desktop Organizer",
+    "welcome": "Welcome {name} to your organized workspace",
+    "statusReady": "Security core and BiDi language engine are ready"
+  },
+  "language": {
+    "label": "Language & Direction",
+    "arabic": "العربية (RTL)",
+    "english": "English (LTR)",
+    "switchAction": "Switch language instantly",
+    "currentDirection": "Active direction: {direction}"
+  },
+  "security": {
+    "gateTitle": "Input Validation & Path Sanitizer (CommandGate)",
+    "pathCheckLabel": "Path Safety Check",
+    "pathValid": "Path is safe and authorized: {path}",
+    "pathRejected": "Path rejected for security reasons",
+    "sanitizerLabel": "Sanitize notes and links against XSS payloads",
+    "filesProtectedCount": "Verified {count} items safely without modifying source files"
+  },
+  "bidi": {
+    "previewTitle": "BiDi Filename & Path Isolation Preview",
+    "description": "Mixed-direction filenames are automatically isolated so Arabic, English, and numbers never scramble.",
+    "sampleFileCount": "Showing {count} preview files for {name}"
+  }
+}
