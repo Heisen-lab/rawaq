@@ -1,6 +1,7 @@
 pub mod core_domain;
 pub mod i18n;
 pub mod security;
+pub mod storage;
 
 use crate::i18n::{verify_embedded_catalogs, ParityReport};
 use crate::security::{CommandGate, PathSanitizer, ValidatedPath};
