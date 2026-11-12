@@ -5,6 +5,43 @@
 
 ---
 
+## [المرحلة 4] — محرك الفرز الآمن والتراجع بضغطة زر (PR #10 / Issue #9)
+*التاريخ: 2026-11-12*
+
+### المضاف (Added)
+- **محرك الفرز الآمن للنواة الخلفية (`SafeOrganizerEngine`):**
+  - فحص وحساب خطة المعاينة الإلزامية (`Dry-Run Preview`) مع ضمان الصفرية المطلقة للتعديلات على القرص أثناء المعاينة (`Zero Filesystem Mutations`).
+  - كشف وحل تعارض أسماء الملفات تلقائيًا (`Collision Avoidance`) بإضافة لواحق رقمية آمنة مثل ` (1)` و` (2)` مع المنع البات للكتابة فوق أي ملف قائم.
+  - تطبيق بروتوكول النقل الآمن الذري المعتمد في `ADR-0002`:
+    1. تسجيل العملية بحالة `PENDING` في جدول `undo_operations`.
+    2. نسخ الملف إلى الوجهة.
+    3. التحقق الرياضي الصارم من تطابق بصمة `SHA-256` وحجم الملف.
+    4. في حال الفشل أو اختلاف البصمة: حذف النسخة التالفة في الوجهة فورًا، إبقاء المصدر سليمًا 100%، وتسجيل حالة `FAILED`.
+    5. في حال التطابق: حذف الملف من المصدر، وتحديث سجل التراجع إلى `COMPLETED`.
+  - معالجة ذكية ومفصلة للأخطاء وحالات الملفات المقفولة أو المحمية (`Locked / Permission Denied`) دون إيقاف بقية الدفعة.
+  - محرك التراجع الكامل بنقرة زر (`One-Click Undo Engine`) القادر على استرجاع دفعات النقل كاملة بدقة متناهية إلى مساراتها الأصلية مع التحقق من سلامة البصمات.
+- **أوامر التواصل الآمن في Tauri (IPC Commands):**
+  - `preview_organization_command`: حساب خطة المعاينة وقوائم النقل والاستبعاد.
+  - `execute_organization_command`: تنفيذ الفرز الآمن الذري للدفعة وتوليد تقرير تفصيلي.
+  - `undo_organization_command`: التراجع عن دفعة فرز سابقة واستعادة الملفات لمساراتها الأصلية.
+  - `list_undo_batches_command`: استعراض الدفعات السابقة وسجل العمليات.
+- **مكونات الواجهة ثنائية الاتجاه (`BiDi UI`):**
+  - مكوّن `OrganizerPreview`: جدول معاينة تفاعلي يعرض المسارات الأصلية والوجهات المقترحة مع شارات الأمان لكشف التعارضات والعناصر المتخطاة، وزر تراجع فوري (`Undo`) بعد التنفيذ.
+  - أنماط بصرية ثنائية الاتجاه بخصائص CSS المنطقية حصريًا (`bidi.css`) دون أي خاصية فيزيائية (`left/right`).
+- **الاختبارات الآلية المكتملة:**
+  - `organizer::test_dry_run_zero_filesystem_mutations`
+  - `organizer::test_collision_never_overwrites_existing_file`
+  - `organizer::test_checksum_mismatch_aborts_and_preserves_source`
+  - `organizer::test_locked_or_permission_denied_file_reported_clearly`
+  - `organizer::test_undo_batch_restores_exact_original_paths`
+  - `ui::renders Dry-Run preview with collision detection in Arabic (RTL)`
+  - `ui::calls execute and undo flows correctly`
+  - `ui::handles empty rules and displays skipped items note`
+- **البرنامج التوضيحي الواقعي (`demo_organizer`):**
+  - تشغيل مسار تنظيمي كامل على ملفات حقيقية بأسماء عربية وإنجليزية وحساب بصمات `SHA-256`، إثبات عدم التعديل أثناء المعاينة، تفادي التعارضات، والتراجع بنقرة زر واحدة.
+
+---
+
 ## [المرحلة 3] — صناديق تنظيم سطح المكتب ووضع الكبسولة والمجموعات (PR #8 / Issue #7)
 *التاريخ: 2026-11-12*
 

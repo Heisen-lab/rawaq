@@ -441,6 +441,24 @@ impl Storage {
         Ok(self.conn.last_insert_rowid())
     }
 
+    pub fn list_organize_rules(&self) -> Result<Vec<OrganizeRule>, StorageError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, extensions, target_folder, is_enabled, created_at FROM organize_rules ORDER BY id",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(OrganizeRule {
+                id: Some(row.get(0)?),
+                name: row.get(1)?,
+                extensions: row.get(2)?,
+                target_folder: row.get(3)?,
+                is_enabled: row.get::<_, i32>(4)? != 0,
+                created_at: Some(row.get(5)?),
+            })
+        })?;
+        let result: Result<Vec<OrganizeRule>, rusqlite::Error> = rows.collect();
+        result.map_err(StorageError::from)
+    }
+
     // ── Task Items ────────────────────────────────────────────────────────
 
     pub fn insert_task(&self, task: &TaskItem) -> Result<i64, StorageError> {
@@ -538,6 +556,28 @@ impl Storage {
         })?;
         rows.collect::<Result<Vec<_>, _>>()
             .map_err(StorageError::from)
+    }
+
+    pub fn update_undo_operation_status(
+        &self,
+        id: i64,
+        status: &str,
+        error_message: Option<&str>,
+    ) -> Result<(), StorageError> {
+        self.conn.execute(
+            "UPDATE undo_operations SET status = ?1, error_message = ?2 WHERE id = ?3",
+            params![status, error_message, id],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_undo_batches(&self) -> Result<Vec<String>, StorageError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT DISTINCT batch_id FROM undo_operations ORDER BY id DESC")?;
+        let rows = stmt.query_map([], |row| row.get(0))?;
+        let result: Result<Vec<String>, rusqlite::Error> = rows.collect();
+        result.map_err(StorageError::from)
     }
 
     // ── Multi-table atomic transaction (for testing rollback) ─────────────

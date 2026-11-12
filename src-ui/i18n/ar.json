@@ -40,5 +40,19 @@
     "itemCount": "{count} عنصر",
     "folderGroupTab": "مجموعة: {name}",
     "dissolveGroup": "فك المجموعة"
+  },
+  "organizer": {
+    "title": "محرك الفرز الآمن لسطح المكتب",
+    "previewHeading": "معاينة الفرز الآلي (Dry-Run)",
+    "previewSubtitle": "افحص التغييرات قبل لمس أي ملف على جهازك",
+    "executeBtn": "موافقة صريحة وتنفيذ النقل",
+    "undoBtn": "تراجع عن هذه الدفعة بنقرة واحدة",
+    "collisionWarning": "تعارض تم حله بأمان: {resolved}",
+    "sourceHeader": "الملف المصدر",
+    "destHeader": "الوجهة المقترحة",
+    "ruleHeader": "القاعدة",
+    "undoSuccess": "تم استعادة {count} ملف إلى مكانه الأصلي بنجاح",
+    "skippedHeading": "عناصر تم تخطيها ({count})",
+    "emptyPlan": "لا توجد ملفات تحتاج إلى نقل"
   }
 }

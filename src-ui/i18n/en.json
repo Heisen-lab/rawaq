@@ -40,5 +40,19 @@
     "itemCount": "{count} items",
     "folderGroupTab": "Group: {name}",
     "dissolveGroup": "Dissolve Group"
+  },
+  "organizer": {
+    "title": "Safe Desktop Organizer",
+    "previewHeading": "Dry-Run Preview",
+    "previewSubtitle": "Inspect planned changes before moving any file",
+    "executeBtn": "Approve & Execute Move",
+    "undoBtn": "One-Click Undo",
+    "collisionWarning": "Safely resolved collision: {resolved}",
+    "sourceHeader": "Source File",
+    "destHeader": "Proposed Destination",
+    "ruleHeader": "Rule",
+    "undoSuccess": "Successfully restored {count} files to original locations",
+    "skippedHeading": "Skipped items ({count})",
+    "emptyPlan": "No files need moving"
   }
 }

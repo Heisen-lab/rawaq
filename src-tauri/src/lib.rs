@@ -1,13 +1,15 @@
 pub mod boxes;
 pub mod core_domain;
 pub mod i18n;
+pub mod organizer;
 pub mod security;
 pub mod storage;
 
 use crate::boxes::{BoxService, FolderState};
 use crate::i18n::{verify_embedded_catalogs, ParityReport};
+use crate::organizer::{DryRunPlan, ExecutionReport, SafeOrganizerEngine, UndoReport};
 use crate::security::{CommandGate, PathSanitizer, ValidatedPath};
-use crate::storage::{DesktopBox, Storage};
+use crate::storage::{DesktopBox, OrganizeRule, Storage};
 
 #[tauri::command]
 fn validate_path_command(
@@ -76,6 +78,36 @@ fn dissolve_group_command(db_path: String, group_id: i64) -> Result<(), String> 
     BoxService::dissolve_group(&storage, group_id).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn preview_organization_command(
+    source_folder: String,
+    rules: Vec<OrganizeRule>,
+) -> Result<DryRunPlan, String> {
+    SafeOrganizerEngine::compute_dry_run(std::path::Path::new(&source_folder), &rules)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn execute_organization_command(
+    db_path: String,
+    plan: DryRunPlan,
+) -> Result<ExecutionReport, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    SafeOrganizerEngine::execute_plan(&storage, &plan, None).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn undo_organization_command(db_path: String, batch_id: String) -> Result<UndoReport, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    SafeOrganizerEngine::undo_batch(&storage, &batch_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_undo_batches_command(db_path: String) -> Result<Vec<String>, String> {
+    let storage = Storage::open(std::path::Path::new(&db_path)).map_err(|e| e.to_string())?;
+    storage.list_undo_batches().map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -88,7 +120,11 @@ pub fn run() {
             update_box_command,
             delete_box_command,
             merge_boxes_command,
-            dissolve_group_command
+            dissolve_group_command,
+            preview_organization_command,
+            execute_organization_command,
+            undo_organization_command,
+            list_undo_batches_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running Rawaq Tauri application");
