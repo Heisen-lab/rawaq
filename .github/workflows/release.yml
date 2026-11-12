@@ -65,7 +65,7 @@ jobs:
           cargo test --all-targets
           Pop-Location
 
-      - name: Build Tauri Release Bundles & Generate SHA-256 Checksums
+      - name: Build Tauri Release Bundles
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,3 +75,42 @@ jobs:
           releaseBody: "إصدار مبني ومختبر تلقائيًا عبر GitHub Actions على Windows وmacOS وLinux."
           releaseDraft: false
           prerelease: false
+
+      - name: Generate and Upload Per-Platform SHA256 Checksums
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $bundleDir = "src-tauri/target/release/bundle"
+          if (Test-Path -LiteralPath $bundleDir) {
+            $files = Get-ChildItem -Path $bundleDir -Recurse -File | Where-Object { $_.Extension -match '\.(msi|exe|dmg|AppImage|deb|zip|tar\.gz)$' }
+            $sums = @()
+            foreach ($f in $files) {
+              $hash = (Get-FileHash -Path $f.FullName -Algorithm SHA256).Hash.ToLower()
+              $sums += "$hash  $($f.Name)"
+            }
+            if ($sums.Count -gt 0) {
+              $sumsContent = ($sums | Sort-Object) -join "`n"
+              Set-Content -Path "SHA256SUMS-${{ matrix.os }}.txt" -Value $sumsContent -Encoding utf8
+              gh release upload ${{ github.ref_name }} "SHA256SUMS-${{ matrix.os }}.txt" --clobber
+            }
+          }
+
+  aggregate-checksums:
+    name: Aggregate & Publish Canonical SHA256SUMS
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download & Merge Checksums into Canonical SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ./checksums
+          gh release download ${{ github.ref_name }} --pattern "SHA256SUMS-*.txt" --dir ./checksums || true
+          if ls ./checksums/SHA256SUMS-*.txt 1> /dev/null 2>&1; then
+            cat ./checksums/SHA256SUMS-*.txt | sort -u > SHA256SUMS.txt
+            gh release upload ${{ github.ref_name }} SHA256SUMS.txt --clobber
+          fi

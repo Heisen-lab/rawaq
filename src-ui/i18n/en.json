@@ -91,5 +91,23 @@
     "badgeFile": "File",
     "badgeTask": "Task",
     "badgeNote": "Note"
+  },
+  "display": {
+    "title": "Multi-Monitor & Resource Saver",
+    "displaysCount": "Connected Displays: {count}",
+    "primaryBadge": "Primary",
+    "externalBadge": "External",
+    "resolutionLabel": "Resolution: {width} × {height} ({scale}x)",
+    "placementsTitle": "Box Placements across Displays",
+    "boxOnDisplay": "Box #{id} on Display: {display}",
+    "resourceSaverTitle": "Resource Saver Mode",
+    "resourceSaverDesc": "Unload visual memory and pause render loops for collapsed boxes during idle",
+    "resourceSaverActive": "Active — Suspended {count} boxes saving ~{kb} KB",
+    "resourceSaverInactive": "Disabled — All boxes rendering in full mode",
+    "toggleSaver": "Toggle Resource Saver",
+    "simulateUnplug": "Simulate Unplug",
+    "simulateReconnect": "Simulate Reconnect",
+    "releaseChecksumsTitle": "Official Release SHA-256 Checksums",
+    "releaseAllVerified": "All platform bundles verified 100% matched"
   }
 }

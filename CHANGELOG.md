@@ -5,6 +5,45 @@
 
 ---
 
+## [المرحلة 7] — تعدد الشاشات وتوفير الموارد وبناء الإصدارات الآلي (PR #16 / Issue #15)
+*التاريخ: 2026-11-12*
+
+### المضاف (Added)
+- **إدارة طوبولوجيا الشاشات المتعددة (`DisplayTopologyManager`):**
+  - ربط وتتبع مواقع وأبعاد الصناديق نسبةً لهوية كل شاشة (`Display Topology Binding`).
+  - التكيّف التلقائي عند فصل شاشة خارجية: نقل الصناديق المتأثرة فورًا إلى الشاشة الأساسية وتقييدها بأمان داخل حدود الشاشة المرئية لمنع ضياعها في الفراغ، مع الاحتفاظ بهوية الشاشة المفضلة والإحداثيات الأصلية.
+  - استعادة الإحداثيات الأصلية الدقيقة بنسبة 100% فور إعادة توصيل الشاشة الخارجية (`Exact Coordinates Restoration`).
+- **التكيّف مع تغيير الدقة ومقياس العرض (`Resolution & DPI/Scale Adaptation`):**
+  - حساب نسبي لمواقع وأبعاد الصناديق عند تغيير الدقة (مثلًا من 4K إلى 1366x768 أو 640x480).
+  - تقييد صارم داخل حدود الشاشة المرئية (`clamp_within`) وضمان عدم خروج أي صندوق خارج مجال الرؤية.
+- **وضع توفير الموارد (`Resource Saver Mode`):**
+  - تعليق الرسم وتفريغ الذاكرة البصرية للصناديق المطوية في وضع الخمول (`is_suspended`).
+  - توفير تقديري يبلغ ~8 ميجابايت من الذاكرة لكل صندوق معلّق.
+- **سير عمل الإصدار الآلي وملف البصمات الموحّد (`ReleaseManager` & `release.yml`):**
+  - توليد بصمات `SHA-256` لجميع الحزم التنفيذية للأنظمة الثلاثة (`Windows .msi/.exe`, `macOS .dmg`, `Linux .AppImage/.deb`).
+  - توليد ملف `SHA256SUMS.txt` بصيغة GNU sha256sum القياسية (`<hash>  <filename>`).
+  - التحقق الصارم من صحة البصمات، والكشف الفوري عن أي تلاعب أو تلف أو نقص في الحزم التنفيذية.
+  - تحديث سير عمل GitHub Actions (`.github/workflows/release.yml`) لجمع وتدقيق ورفع ملف `SHA256SUMS.txt` تلقائيًا مع الإصدار.
+- **أوامر التواصل الآمن في Tauri (IPC Commands):**
+  - `register_display_command`, `unregister_display_command`, `list_displays_command`
+  - `place_box_command`, `get_box_placement_command`, `list_box_placements_command`
+  - `set_display_resolution_command`, `toggle_resource_saver_command`, `set_box_collapsed_command`
+  - `generate_release_checksums_command`, `verify_release_checksums_command`
+- **مكونات الواجهة الرسومية ثنائية الاتجاه (`BiDi UI`):**
+  - مكوّن `MultiMonitorHub`: استعراض الشاشات المتصلة، محاكاة فصل وإعادة توصيل الشاشات، تبديل وضع توفير الموارد، وعرض شارة التحقق من بصمات الإصدار الرسمية.
+  - التزام صارم بنسبة 100% بالخصائص المنطقية في CSS (`bidi.css`) وتطابق كامل للترجمة بين العربية والإنجليزية.
+- **الاختبارات الآلية المكتملة:**
+  - `display::test_unplug_and_reconnect_monitor_restores_exact_coordinates`
+  - `display::test_resolution_and_dpi_scale_change_keeps_boxes_in_bounds`
+  - `release::test_automated_github_release_produces_checksums`
+  - `ui::renders MultiMonitorHub in Arabic (RTL) with displays and placements`
+  - `ui::toggles Resource Saver Mode and suspends collapsed boxes`
+  - `ui::handles unplug and reconnect simulation restoring coordinates`
+- **البرنامج التوضيحي الواقعي (`demo_display_and_release`):**
+  - اختبار عملي شامل يثبت حفظ واستعادة إحداثيات الشاشات، صمود تقليص الدقة، توفير الموارد، وفحص بصمات حزم الإصدار.
+
+---
+
 ## [المرحلة 6] — إدارة المهام اليومية والالتقاط السريع ومؤقت التركيز والبحث الموحد (PR #14 / Issue #13)
 *التاريخ: 2026-11-12*
 
