@@ -87,3 +87,269 @@ body {
   background-color: rgba(15, 23, 42, 0.5);
   border-radius: 0.375rem;
 }
+
+/* ── Stage 3: Desktop Boxes & Capsule Mode ──────────────────────────── */
+
+.rawaq-capsule-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.625rem;
+  padding-inline: 1rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--accent-primary);
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.rawaq-capsule-info {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.rawaq-capsule-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rawaq-capsule-badge {
+  font-size: 0.75rem;
+  padding-block: 0.125rem;
+  padding-inline: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--surface-border);
+  color: var(--accent-primary);
+}
+
+.rawaq-capsule-expand-btn {
+  padding-block: 0.25rem;
+  padding-inline: 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--accent-primary);
+  background: transparent;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.rawaq-box {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.rawaq-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
+  background-color: rgba(15, 23, 42, 0.4);
+  border-block-end: 1px solid var(--surface-border);
+}
+
+.rawaq-box-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rawaq-box-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rawaq-box-badge {
+  font-size: 0.75rem;
+  padding-block: 0.125rem;
+  padding-inline: 0.375rem;
+  border-radius: 0.25rem;
+  background-color: var(--surface-border);
+  color: var(--text-secondary);
+}
+
+.rawaq-box-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.rawaq-icon-btn {
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  border: 1px solid var(--surface-border);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.rawaq-icon-btn.active {
+  background-color: var(--surface-border);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.rawaq-icon-btn.danger:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.rawaq-sort-select {
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.rawaq-box-banner {
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
+  border-block-end: 1px solid var(--surface-border);
+}
+
+.rawaq-box-banner.warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-inline-start: 4px solid #f59e0b;
+}
+
+.rawaq-box-banner.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-inline-start: 4px solid #ef4444;
+}
+
+.banner-title {
+  font-weight: 600;
+  color: #fbbf24;
+  margin-block-end: 0.25rem;
+}
+
+.banner-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.rawaq-box-content {
+  padding-block: 1rem;
+  padding-inline: 1rem;
+  min-block-size: 10rem;
+}
+
+.rawaq-box-content.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: 0.75rem;
+}
+
+.rawaq-box-content.grid .rawaq-box-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-block: 0.75rem;
+  padding-inline: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: rgba(15, 23, 42, 0.3);
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+}
+
+.rawaq-box-content.grid .rawaq-box-item:hover {
+  border-color: var(--surface-border);
+  background-color: rgba(15, 23, 42, 0.6);
+}
+
+.rawaq-box-content.grid .item-icon {
+  font-size: 1.75rem;
+  margin-block-end: 0.375rem;
+}
+
+.rawaq-box-content.grid .item-name {
+  font-size: 0.8125rem;
+  word-break: break-all;
+}
+
+.rawaq-box-content.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.rawaq-box-content.list .rawaq-box-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: rgba(15, 23, 42, 0.3);
+}
+
+.rawaq-box-content.list .item-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rawaq-box-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rawaq-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-block-end: 1px solid var(--surface-border);
+  padding-block-end: 0.5rem;
+}
+
+.rawaq-group-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rawaq-tab-btn {
+  padding-block: 0.375rem;
+  padding-inline: 0.875rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--surface-border);
+  background-color: var(--surface-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.rawaq-tab-btn.active {
+  border-color: var(--accent-primary);
+  background-color: var(--accent-primary);
+  color: var(--surface-bg);
+}
+
+.rawaq-dissolve-btn {
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--surface-border);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 0.25rem;
+  cursor: pointer;
+}

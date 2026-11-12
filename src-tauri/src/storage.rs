@@ -350,6 +350,87 @@ impl Storage {
             .map_err(StorageError::from)
     }
 
+    pub fn update_desktop_box(&self, b: &DesktopBox) -> Result<(), StorageError> {
+        let Some(box_id) = b.id else {
+            return Err(StorageError::MigrationFailed(
+                "Cannot update desktop box without id".into(),
+            ));
+        };
+        self.conn.execute(
+            "UPDATE desktop_boxes SET 
+                name = ?1,
+                folder_path = ?2,
+                display_mode = ?3,
+                is_capsule_collapsed = ?4,
+                sort_order = ?5,
+                position_x = ?6,
+                position_y = ?7,
+                width = ?8,
+                height = ?9,
+                display_id = ?10,
+                group_id = ?11,
+                updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+             WHERE id = ?12",
+            params![
+                b.name,
+                b.folder_path,
+                b.display_mode,
+                b.is_capsule_collapsed as i32,
+                b.sort_order,
+                b.position_x,
+                b.position_y,
+                b.width,
+                b.height,
+                b.display_id,
+                b.group_id,
+                box_id,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_desktop_box(&self, id: i64) -> Result<(), StorageError> {
+        self.conn
+            .execute("DELETE FROM desktop_boxes WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    pub fn list_boxes_by_group(&self, group_id: i64) -> Result<Vec<DesktopBox>, StorageError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, folder_path, display_mode, is_capsule_collapsed, sort_order, position_x, position_y, width, height, display_id, group_id, created_at, updated_at FROM desktop_boxes WHERE group_id = ?1 ORDER BY id",
+        )?;
+        let rows = stmt.query_map(params![group_id], |row| {
+            Ok(DesktopBox {
+                id: Some(row.get(0)?),
+                name: row.get(1)?,
+                folder_path: row.get(2)?,
+                display_mode: row.get(3)?,
+                is_capsule_collapsed: row.get::<_, i32>(4)? != 0,
+                sort_order: row.get(5)?,
+                position_x: row.get(6)?,
+                position_y: row.get(7)?,
+                width: row.get(8)?,
+                height: row.get(9)?,
+                display_id: row.get(10)?,
+                group_id: row.get(11)?,
+                created_at: Some(row.get(12)?),
+                updated_at: Some(row.get(13)?),
+            })
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(StorageError::from)
+    }
+
+    pub fn delete_box_group(&self, group_id: i64) -> Result<(), StorageError> {
+        self.conn.execute(
+            "UPDATE desktop_boxes SET group_id = NULL WHERE group_id = ?1",
+            params![group_id],
+        )?;
+        self.conn
+            .execute("DELETE FROM box_groups WHERE id = ?1", params![group_id])?;
+        Ok(())
+    }
+
     // ── Organize Rules ────────────────────────────────────────────────────
 
     pub fn insert_organize_rule(&self, rule: &OrganizeRule) -> Result<i64, StorageError> {

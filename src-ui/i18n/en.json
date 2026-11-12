@@ -24,5 +24,21 @@
     "previewTitle": "BiDi Filename & Path Isolation Preview",
     "description": "Mixed-direction filenames are automatically isolated so Arabic, English, and numbers never scramble.",
     "sampleFileCount": "Showing {count} preview files for {name}"
+  },
+  "boxes": {
+    "title": "Desktop Organizer Boxes",
+    "capsuleCollapse": "Collapse to capsule",
+    "capsuleExpand": "Expand box",
+    "modeGrid": "Grid view",
+    "modeList": "List view",
+    "sortByName": "Sort by name",
+    "sortByType": "Sort by type",
+    "sortByDate": "Sort by date",
+    "sortBySize": "Sort by size",
+    "disconnectedTitle": "Folder temporarily unavailable or disconnected",
+    "disconnectedDesc": "Could not find mapped path: {path}",
+    "itemCount": "{count} items",
+    "folderGroupTab": "Group: {name}",
+    "dissolveGroup": "Dissolve Group"
   }
 }
