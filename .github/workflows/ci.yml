@@ -1,0 +1,160 @@
+name: CI — Cross-Platform Build, Test & Governance
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-governance:
+    name: PR Governance & Prompt Check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR includes Prompt documentation
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ -z "$PR_BODY" ]; then
+            echo "::error::وصف الـ Pull Request فارغ. يجب توثيق البرومبت (Prompt) والتغييرات وفق AGENTS.md."
+            exit 1
+          fi
+          if ! echo "$PR_BODY" | grep -qiE "(البرومبت|Prompt)"; then
+            echo "::error::يجب أن يحتوي وصف الـ Pull Request على قسم يوثّق الرسالة (البرومبت / Prompt) التي أنتجته وفق AGENTS.md."
+            exit 1
+          fi
+          echo "PR governance check passed."
+
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 1. Verify Foundation Files Exist
+        shell: pwsh
+        run: |
+          $required = @(
+            "README.md",
+            "AGENTS.md",
+            "docs/PRD.md",
+            "docs/ARCHITECTURE.md",
+            "docs/ROADMAP.md",
+            "docs/adr/0001-desktop-framework-and-languages.md",
+            "docs/adr/0002-data-storage-and-file-safety.md",
+            "docs/adr/0003-os-windowing-and-desktop-integration.md",
+            "docs/adr/0004-internationalization-and-rtl-architecture.md",
+            "docs/adr/0005-testing-ci-and-release-automation.md"
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath $file)) {
+              Write-Error "Missing required foundation file: $file"
+              exit 1
+            }
+          }
+          Write-Host "All foundation files verified on $($env:RUNNER_OS)."
+
+      - name: 2. Security Gate — Scan for Hardcoded Secrets
+        shell: pwsh
+        run: |
+          $trackedFiles = git ls-files
+          $secretPatterns = @(
+            'PRIVATE KEY-----',
+            'ghp_[A-Za-z0-9]{36}',
+            'github_pat_[A-Za-z0-9_]{82}',
+            'AKIA[0-9A-Z]{16}',
+            'AIza[0-9A-Za-z\-_]{35}'
+          )
+          foreach ($file in $trackedFiles) {
+            if (Test-Path -LiteralPath $file -PathType Leaf) {
+              $content = Get-Content -LiteralPath $file -Raw -ErrorAction SilentlyContinue
+              if ($null -ne $content) {
+                foreach ($pattern in $secretPatterns) {
+                  if ($content -cmatch $pattern) {
+                    Write-Error "Potential secret or private key detected in $file matching pattern $pattern"
+                    exit 1
+                  }
+                }
+              }
+            }
+          }
+          Write-Host "Security secret scan passed with zero findings."
+
+      - name: 3. Detect Stage Status (Foundation vs. Code Stage)
+        id: stage
+        shell: pwsh
+        run: |
+          $hasFrontend = Test-Path -LiteralPath "package.json"
+          $hasBackend = Test-Path -LiteralPath "src-tauri/Cargo.toml"
+          if ($hasFrontend -and $hasBackend) {
+            "has_code=true" >> $env:GITHUB_OUTPUT
+            Write-Host "Code manifests detected — running full cross-platform build and test suite."
+          } elseif (-not $hasFrontend -and -not $hasBackend) {
+            "has_code=false" >> $env:GITHUB_OUTPUT
+            Write-Host "Stage 0 (Foundation Files Only) detected — skipping code compilation until Stage 1 approval."
+          } else {
+            Write-Error "Incomplete workspace setup: package.json and src-tauri/Cargo.toml must both be present in Stage 1."
+            exit 1
+          }
+
+      - name: 4. Install Linux System Dependencies (Ubuntu)
+        if: steps.stage.outputs.has_code == 'true' && matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev \
+            libssl-dev
+
+      - name: 5. Setup Node.js
+        if: steps.stage.outputs.has_code == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 6. Setup Rust Toolchain
+        if: steps.stage.outputs.has_code == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: 7. Cache Rust Cargo Registry & Target
+        if: steps.stage.outputs.has_code == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: 8. Frontend Install, Lint, Typecheck & Tests (BiDi + RTL/LTR + i18n Parity)
+        if: steps.stage.outputs.has_code == 'true'
+        shell: pwsh
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test -- --run
+
+      - name: 9. Backend Rust Format, Clippy & Automated Tests (Happy + Edge + Fault Paths)
+        if: steps.stage.outputs.has_code == 'true'
+        working-directory: src-tauri
+        shell: pwsh
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test --all-targets -- --nocapture
