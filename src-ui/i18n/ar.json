@@ -24,5 +24,21 @@
     "previewTitle": "معاينة عزل الأسماء والمسارات ثنائية الاتجاه",
     "description": "تُعزل أسماء الملفات المختلطة تلقائيًا لمنع تداخل الحروف العربية والإنجليزية والأرقام.",
     "sampleFileCount": "يوجد {count} ملف في قائمة المعاينة للمستخدم {name}"
+  },
+  "boxes": {
+    "title": "صناديق تنظيم سطح المكتب",
+    "capsuleCollapse": "طيّ إلى كبسولة",
+    "capsuleExpand": "توسيع الصندوق",
+    "modeGrid": "عرض شبكي",
+    "modeList": "عرض قائمة",
+    "sortByName": "ترتيب بالاسم",
+    "sortByType": "ترتيب بالنوع",
+    "sortByDate": "ترتيب بالتاريخ",
+    "sortBySize": "ترتيب بالحجم",
+    "disconnectedTitle": "المجلد غير متاح مؤقتًا أو تم فصل القرص",
+    "disconnectedDesc": "تعذر العثور على المسار المربوط: {path}",
+    "itemCount": "{count} عنصر",
+    "folderGroupTab": "مجموعة: {name}",
+    "dissolveGroup": "فك المجموعة"
   }
 }
