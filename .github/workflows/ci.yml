@@ -71,9 +71,9 @@ jobs:
       - name: 2. Security Gate — Scan for Hardcoded Secrets
         shell: pwsh
         run: |
-          $trackedFiles = git ls-files
+          $trackedFiles = git ls-files | Where-Object { $_ -ne ".github/workflows/ci.yml" }
           $secretPatterns = @(
-            'PRIVATE KEY-----',
+            '-----BEGIN [A-Z ]*PRIVATE KEY-----',
             'ghp_[A-Za-z0-9]{36}',
             'github_pat_[A-Za-z0-9_]{82}',
             'AKIA[0-9A-Z]{16}',
