@@ -5,6 +5,41 @@
 
 ---
 
+## [المرحلة 5] — كبسولة الشاشة العلوية التفاعلية والدرج المؤقت والحافظة (PR #12 / Issue #11)
+*التاريخ: 2026-11-12*
+
+### المضاف (Added)
+- **درج الملفات المؤقت (`QuickShelfManager`):**
+  - تجميع مراجع الملفات بالسحب والإفلات مؤقتًا دون نقل أو تعديل أو حذف أي ملف على القرص (`Zero Filesystem Mutations`).
+  - التحقق الأمني من المسارات عبر `PathSanitizer`، والتعامل المرن مع الملفات المحذوفة أو المفقودة خارج البرنامج بوسمها «غير متاحة» دون انهيار التطبيق.
+  - إزالة مرجع فردي أو إفراغ الدرج المؤقت بالكامل مع بقاء الملفات الأصلية على القرص بنسبة 100%.
+- **محرك كشف ملء الشاشة والإخفاء التلقائي (`FullscreenDetector`):**
+  - إدارة آلة حالات الكبسولة (`Visible` ↔ `Collapsed` ↔ `HiddenFullscreen`).
+  - إخفاء الكبسولة تلقائيًا عند دخول أي تطبيق خارجي أو لعبة أو فيديو وضع ملء الشاشة، واستعادة حالتها السابقة بسلاسة فور الخروج.
+- **خدمة إجراءات الحافظة الذكية بموافقة صريحة (`SmartClipboardService`):**
+  - احترام خصوصية المستخدم: عدم فحص الحافظة إطلاقًا إلا بموافقة صريحة (`opt_in = true`).
+  - التطهير الأمني الصارم والحظر التلقائي للروابط الخبيثة وحقن السكربتات (`javascript:`, `vbscript:`, `data:`, `file://` غير المصرح بها) وتصنيفها `RejectedDangerous`.
+  - اكتشاف الروابط الآمنة (`SafeUrl`) وتجريد وسوم HTML من النصوص مع الاحتفاظ بالمحتوى النظيف وحفظها في قاعدة بيانات SQLite المحلية (`capture_notes`).
+- **أوامر التواصل الآمن في Tauri (IPC Commands):**
+  - `add_to_quick_shelf_command`, `get_quick_shelf_items_command`, `remove_from_quick_shelf_command`, `clear_quick_shelf_command`
+  - `set_fullscreen_active_command`, `toggle_capsule_collapse_command`, `get_capsule_state_command`
+  - `process_clipboard_command`, `save_clipboard_note_command`
+- **مكونات الواجهة الرسومية ثنائية الاتجاه (`BiDi UI`):**
+  - مكوّن `TopCapsule`: كبسولة عائمة أعلى الشاشة تدعم وضع الشريط المصغر (`Pill Mode`) ووضع الجزيرة التفاعلية الممتدة (`Living Island`)، وتبويبات الدرج المؤقت وإجراءات الحافظة مع إشعار ملء الشاشة.
+  - تصميم ثنائي الاتجاه يعتمد حصريًا على الخصائص المنطقية في CSS (`bidi.css`) دون أي خاصية فيزيائية (`left/right`).
+- **الاختبارات الآلية المكتملة:**
+  - `island::test_quick_shelf_holds_references_without_moving_source`
+  - `island::test_fullscreen_detection_hides_and_restores_capsule`
+  - `island::test_clipboard_sanitizer_blocks_malicious_uris`
+  - `ui::renders TopCapsule in expanded mode with Quick Shelf in Arabic (RTL)`
+  - `ui::renders TopCapsule in collapsed pill mode and toggles expansion`
+  - `ui::renders fullscreen auto-hide notice when isFullscreen is active`
+  - `ui::handles Smart Clipboard suggestions: actionable URL vs rejected malicious content`
+- **البرنامج التوضيحي الواقعي (`demo_island`):**
+  - تجربة واقعية لإنشاء ملفات وفحص بصمات `SHA-256` وإثبات عدم المساس بالقرص، كشف ملء الشاشة، وتطهير الحافظة وحفظ الملاحظات في SQLite.
+
+---
+
 ## [المرحلة 4] — محرك الفرز الآمن والتراجع بضغطة زر (PR #10 / Issue #9)
 *التاريخ: 2026-11-12*
 

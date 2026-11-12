@@ -54,5 +54,20 @@
     "undoSuccess": "تم استعادة {count} ملف إلى مكانه الأصلي بنجاح",
     "skippedHeading": "عناصر تم تخطيها ({count})",
     "emptyPlan": "لا توجد ملفات تحتاج إلى نقل"
+  },
+  "island": {
+    "title": "كبسولة رَوَاق التفاعلية",
+    "shelfTitle": "درج الملفات المؤقت",
+    "shelfEmpty": "اسحب الملفات وأفلتها هنا لتجميعها مؤقتًا دون المساس بالأصل",
+    "shelfCount": "تم تجميع {count} ملف في الدرج",
+    "clearShelf": "إفراغ الدرج",
+    "removeItem": "إزالة المرجع",
+    "clipboardTitle": "إجراء ذكي للحافظة",
+    "clipboardSave": "حفظ في الملاحظات",
+    "clipboardDismiss": "تجاهل",
+    "clipboardRejected": "محتوى غير آمن تم حظره",
+    "fullscreenNotice": "وضع ملء الشاشة مفعّل (الكبسولة مخفية تلقائيًا)",
+    "toggleCapsule": "تبديل وضع الكبسولة",
+    "optInNotice": "الموافقة المسبقة على فحص الحافظة مفعّلة"
   }
 }
