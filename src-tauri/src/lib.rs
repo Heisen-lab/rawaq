@@ -1,14 +1,20 @@
 pub mod boxes;
 pub mod core_domain;
+pub mod display;
 pub mod i18n;
 pub mod island;
 pub mod organizer;
 pub mod productivity;
+pub mod release;
 pub mod search;
 pub mod security;
 pub mod storage;
 
 use crate::boxes::{BoxService, FolderState};
+use crate::display::{
+    BoxPlacement, DisplayInfo, DisplayRect, DisplayTopologyManager, ResourceSaverReport,
+    TopologyChangeReport,
+};
 use crate::i18n::{verify_embedded_catalogs, ParityReport};
 use crate::island::{
     CapsuleState, ClipboardSuggestion, FullscreenDetector, QuickShelfItem, QuickShelfManager,
@@ -16,14 +22,17 @@ use crate::island::{
 };
 use crate::organizer::{DryRunPlan, ExecutionReport, SafeOrganizerEngine, UndoReport};
 use crate::productivity::{CaptureManager, PomodoroStatus, PomodoroTimer, TaskManager};
+use crate::release::{ReleaseManager, ReleaseVerificationReport};
 use crate::search::{SearchResponse, SearchableFile, UnifiedSearchEngine};
 use crate::security::{CommandGate, PathSanitizer, ValidatedPath};
 use crate::storage::{CaptureNote, DesktopBox, OrganizeRule, Storage, TaskItem};
-use std::sync::OnceLock;
+use std::path::Path;
+use std::sync::{OnceLock, RwLock};
 
 static GLOBAL_SHELF: OnceLock<QuickShelfManager> = OnceLock::new();
 static GLOBAL_DETECTOR: OnceLock<FullscreenDetector> = OnceLock::new();
 static GLOBAL_POMODORO: OnceLock<PomodoroTimer> = OnceLock::new();
+static GLOBAL_TOPOLOGY: OnceLock<RwLock<DisplayTopologyManager>> = OnceLock::new();
 
 fn get_shelf() -> &'static QuickShelfManager {
     GLOBAL_SHELF.get_or_init(QuickShelfManager::new)
@@ -35,6 +44,10 @@ fn get_detector() -> &'static FullscreenDetector {
 
 fn get_pomodoro() -> &'static PomodoroTimer {
     GLOBAL_POMODORO.get_or_init(PomodoroTimer::new)
+}
+
+fn get_topology() -> &'static RwLock<DisplayTopologyManager> {
+    GLOBAL_TOPOLOGY.get_or_init(|| RwLock::new(DisplayTopologyManager::new()))
 }
 
 #[tauri::command]
@@ -345,6 +358,95 @@ fn unified_search_command(
     Ok(UnifiedSearchEngine::search(&storage, &query, &file_list))
 }
 
+#[tauri::command]
+fn register_display_command(display: DisplayInfo) -> Result<TopologyChangeReport, String> {
+    let mut topology = get_topology().write().map_err(|e| e.to_string())?;
+    Ok(topology.register_display(display))
+}
+
+#[tauri::command]
+fn unregister_display_command(display_id: String) -> Result<TopologyChangeReport, String> {
+    let mut topology = get_topology().write().map_err(|e| e.to_string())?;
+    topology
+        .unregister_display(&display_id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_displays_command() -> Result<Vec<DisplayInfo>, String> {
+    let topology = get_topology().read().map_err(|e| e.to_string())?;
+    Ok(topology.list_displays())
+}
+
+#[tauri::command]
+fn place_box_command(
+    box_id: u64,
+    target_display_id: String,
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+) -> Result<DisplayRect, String> {
+    let mut topology = get_topology().write().map_err(|e| e.to_string())?;
+    topology
+        .place_box(box_id, &target_display_id, x, y, width, height)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_box_placement_command(box_id: u64) -> Result<Option<BoxPlacement>, String> {
+    let topology = get_topology().read().map_err(|e| e.to_string())?;
+    Ok(topology.get_placement(box_id).cloned())
+}
+
+#[tauri::command]
+fn list_box_placements_command() -> Result<Vec<BoxPlacement>, String> {
+    let topology = get_topology().read().map_err(|e| e.to_string())?;
+    Ok(topology.list_placements())
+}
+
+#[tauri::command]
+fn set_display_resolution_command(
+    display_id: String,
+    new_bounds: DisplayRect,
+    new_scale: f64,
+) -> Result<TopologyChangeReport, String> {
+    let mut topology = get_topology().write().map_err(|e| e.to_string())?;
+    topology
+        .set_display_resolution(&display_id, new_bounds, new_scale)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn toggle_resource_saver_command(enabled: bool) -> Result<ResourceSaverReport, String> {
+    let mut topology = get_topology().write().map_err(|e| e.to_string())?;
+    Ok(topology.toggle_resource_saver(enabled))
+}
+
+#[tauri::command]
+fn set_box_collapsed_command(box_id: u64, collapsed: bool) -> Result<bool, String> {
+    let mut topology = get_topology().write().map_err(|e| e.to_string())?;
+    topology
+        .set_box_collapsed(box_id, collapsed)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn generate_release_checksums_command(release_dir: String) -> Result<String, String> {
+    let (sums, _) = ReleaseManager::generate_sha256sums_from_dir(Path::new(&release_dir))
+        .map_err(|e| e.to_string())?;
+    Ok(sums)
+}
+
+#[tauri::command]
+fn verify_release_checksums_command(
+    manifest_content: String,
+    release_dir: String,
+) -> Result<ReleaseVerificationReport, String> {
+    ReleaseManager::verify_sha256sums(&manifest_content, Path::new(&release_dir))
+        .map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -387,7 +489,18 @@ pub fn run() {
             pomodoro_status_command,
             pomodoro_save_command,
             pomodoro_restore_command,
-            unified_search_command
+            unified_search_command,
+            register_display_command,
+            unregister_display_command,
+            list_displays_command,
+            place_box_command,
+            get_box_placement_command,
+            list_box_placements_command,
+            set_display_resolution_command,
+            toggle_resource_saver_command,
+            set_box_collapsed_command,
+            generate_release_checksums_command,
+            verify_release_checksums_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running Rawaq Tauri application");

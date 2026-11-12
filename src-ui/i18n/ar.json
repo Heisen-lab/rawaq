@@ -91,5 +91,23 @@
     "badgeFile": "ملف",
     "badgeTask": "مهمة",
     "badgeNote": "ملاحظة"
+  },
+  "display": {
+    "title": "إدارة الشاشات المتعددة وتوفير الموارد",
+    "displaysCount": "الشاشات المتصلة: {count}",
+    "primaryBadge": "الأساسية",
+    "externalBadge": "خارجية",
+    "resolutionLabel": "الدقة: {width} × {height} ({scale}x)",
+    "placementsTitle": "مواقع الصناديق على الشاشات",
+    "boxOnDisplay": "الصندوق #{id} على الشاشة: {display}",
+    "resourceSaverTitle": "وضع توفير الموارد",
+    "resourceSaverDesc": "تفريغ الذاكرة البصرية وتعليق دورات التحديث للصناديق المطوية في وضع الخمول",
+    "resourceSaverActive": "مفعّل — تم تعليق {count} صندوق وتوفير ~{kb} ك.ب",
+    "resourceSaverInactive": "معطّل — جميع الصناديق تعمل بالرسم الكامل",
+    "toggleSaver": "تبديل وضع التوفير",
+    "simulateUnplug": "محاكاة فصل الشاشة",
+    "simulateReconnect": "محاكاة إعادة التوصيل",
+    "releaseChecksumsTitle": "بصمات حزم الإصدار الرسمية (SHA-256)",
+    "releaseAllVerified": "تم التحقق من مطابقة جميع الحزم بنسبة 100%"
   }
 }
